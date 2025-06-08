@@ -26,9 +26,9 @@ def assert_stacktrace_cleaned(original: str, cleaned: str) -> bool:
     # At minimum, should preserve the main error type/message
     first_error_line = next((line for line in lines_original if "Error" in line or "Exception" in line), "")
     if first_error_line:
-        assert any(
-            first_error_line.split(":")[0] in line for line in lines_cleaned
-        ), "Main error type should be preserved"
+        assert any(first_error_line.split(":")[0] in line for line in lines_cleaned), (
+            "Main error type should be preserved"
+        )
 
     return True
 
