@@ -28,8 +28,9 @@ logger = logging.getLogger(__name__)
 class TraceClean:
     """Main class for the trace-clean utility."""
 
-    def __init__(self, model: str = "gpt-4o-mini", api_key: Optional[str] = None,
-                 local_url: str = "http://localhost:11434"):
+    def __init__(
+        self, model: str = "gpt-4o-mini", api_key: Optional[str] = None, local_url: str = "http://localhost:11434"
+    ):
         self.model = model
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         # Validate local URL
@@ -45,7 +46,9 @@ class TraceClean:
         self.config = self._load_config()
 
         if model != "local" and not self.api_key:
-            raise ValueError("API key required for non-local models. Set OPENAI_API_KEY environment variable or use --api-key flag.")
+            raise ValueError(
+                "API key required for non-local models. Set OPENAI_API_KEY environment variable or use --api-key flag."
+            )
 
     def _extract_json_from_response(self, raw_response: str) -> Dict[str, Any]:
         """Extract JSON object from potentially messy model response."""
@@ -55,11 +58,11 @@ class TraceClean:
         end_idx = -1
 
         for i, char in enumerate(raw_response):
-            if char == '{':
+            if char == "{":
                 if not stack:
                     start_idx = i
                 stack.append(char)
-            elif char == '}':
+            elif char == "}":
                 if stack:
                     stack.pop()
                     if not stack:
@@ -84,8 +87,8 @@ class TraceClean:
                 with open(config_path) as f:
                     config = yaml.safe_load(f) or {}
                     # Apply config settings
-                    if 'local_url' in config and not hasattr(self, '_local_url_set'):
-                        self.local_url = config['local_url']
+                    if "local_url" in config and not hasattr(self, "_local_url_set"):
+                        self.local_url = config["local_url"]
                     return config
             except Exception as e:
                 logger.warning(f"Failed to load config: {e}")
@@ -93,7 +96,8 @@ class TraceClean:
 
     def _get_few_shot_prompt(self, stack_trace: str) -> str:
         """Generate the few-shot prompt for the LLM."""
-        prompt = """You are an expert debugging assistant. Analyze the following stack trace and provide a structured summary.
+        prompt = (
+            """You are an expert debugging assistant. Analyze the following stack trace and provide a structured summary.
 
 Your response must be a valid JSON object with exactly these three fields:
 1. "summary": A brief, plain-English explanation of the error (1-2 sentences)
@@ -184,10 +188,13 @@ Response:
 
 Now analyze the following stack trace:
 ```
-""" + stack_trace + """
+"""
+            + stack_trace
+            + """
 ```
 
 IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or after. Start with { and end with }."""
+        )
         return prompt
 
     def _call_openai(self, prompt: str) -> Dict[str, Any]:
@@ -198,11 +205,14 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
             response = client.chat.completions.create(  # type: ignore[call-overload]
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a debugging assistant that analyzes stack traces. Always respond with valid JSON."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are a debugging assistant that analyzes stack traces. Always respond with valid JSON.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
-                temperature=self.config.get('temperature', 0.3),
-                max_tokens=self.config.get('max_tokens', 1500)
+                temperature=self.config.get("temperature", 0.3),
+                max_tokens=self.config.get("max_tokens", 1500),
             )
 
             content = response.choices[0].message.content
@@ -222,14 +232,12 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
             "model": self.config.get("local_model", "llama3.2"),
             "prompt": prompt,
             "stream": False,
-            "temperature": self.config.get('temperature', 0.3),
-            "options": {
-                "num_predict": self.config.get('max_tokens', 2000)
-            }
+            "temperature": self.config.get("temperature", 0.3),
+            "options": {"num_predict": self.config.get("max_tokens", 2000)},
         }
 
         try:
-            response = requests.post(url, json=payload, timeout=self.config.get('timeout', 120))
+            response = requests.post(url, json=payload, timeout=self.config.get("timeout", 120))
             response.raise_for_status()
 
             result = response.json()
@@ -271,7 +279,7 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
 
         # Suspect Functions
         output.append("## Suspect Functions")
-        for i, suspect in enumerate(result['suspect_functions'], 1):
+        for i, suspect in enumerate(result["suspect_functions"], 1):
             output.append(f"\n### {i}. {suspect['function']}")
             output.append(f"- **File**: `{suspect['file']}`")
             output.append(f"- **Line**: {suspect['line']}")
@@ -280,7 +288,7 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
 
         # Next Actions
         output.append("\n## Next Actions")
-        for i, action in enumerate(result['next_actions'], 1):
+        for i, action in enumerate(result["next_actions"], 1):
             output.append(f"{i}. {action}")
 
         return "\n".join(output)
@@ -298,14 +306,18 @@ Examples:
   python app.py 2>&1 | trace-clean
   trace-clean --json < error.log
   trace-clean --model local --local-url http://localhost:11434
-        """
+        """,
     )
 
     parser.add_argument("file", nargs="?", help="File containing the stack trace (reads from stdin if not provided)")
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")
     parser.add_argument("--model", default="gpt-4o-mini", help="Language model to use (default: gpt-4o-mini)")
     parser.add_argument("--api-key", help="API key for the language model provider")
-    parser.add_argument("--local-url", default="http://localhost:11434", help="URL for local model server (default: http://localhost:11434)")
+    parser.add_argument(
+        "--local-url",
+        default="http://localhost:11434",
+        help="URL for local model server (default: http://localhost:11434)",
+    )
 
     args = parser.parse_args()
 
@@ -314,7 +326,7 @@ Examples:
         if not os.path.exists(args.file):
             console.print(f"[red]Error: File '{args.file}' not found[/red]")
             sys.exit(1)
-        with open(args.file, encoding='utf-8') as f:
+        with open(args.file, encoding="utf-8") as f:
             stack_trace = f.read()
     else:
         if sys.stdin.isatty():
@@ -329,16 +341,14 @@ Examples:
     # Limit stack trace size to prevent memory issues
     MAX_STACK_TRACE_SIZE = 50000  # characters
     if len(stack_trace) > MAX_STACK_TRACE_SIZE:
-        console.print(f"[yellow]Warning: Stack trace truncated from {len(stack_trace)} to {MAX_STACK_TRACE_SIZE} characters[/yellow]")
+        console.print(
+            f"[yellow]Warning: Stack trace truncated from {len(stack_trace)} to {MAX_STACK_TRACE_SIZE} characters[/yellow]"
+        )
         stack_trace = stack_trace[:MAX_STACK_TRACE_SIZE]
 
     try:
         # Create analyzer
-        analyzer = TraceClean(
-            model=args.model,
-            api_key=args.api_key,
-            local_url=args.local_url
-        )
+        analyzer = TraceClean(model=args.model, api_key=args.api_key, local_url=args.local_url)
 
         # Analyze stack trace
         with console.status("[bold green]Analyzing stack trace..."):
