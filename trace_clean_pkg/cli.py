@@ -6,19 +6,19 @@ A lightweight CLI tool that provides concise summaries of raw stack traces.
 
 import argparse
 import json
+import logging
 import os
 import sys
-import yaml
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import logging
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 import openai
 import requests
+import yaml
 from rich.console import Console
-from rich.markdown import Markdown
 from rich.json import JSON as RichJSON
+from rich.markdown import Markdown
 
 console = Console()
 logging.basicConfig(level=logging.WARNING)
@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 
 class TraceClean:
     """Main class for the trace-clean utility."""
-    
-    def __init__(self, model: str = "gpt-4o-mini", api_key: Optional[str] = None, 
+
+    def __init__(self, model: str = "gpt-4o-mini", api_key: Optional[str] = None,
                  local_url: str = "http://localhost:11434"):
         self.model = model
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
@@ -39,21 +39,21 @@ class TraceClean:
                 if not parsed.scheme or not parsed.netloc:
                     raise ValueError(f"Invalid URL format: {local_url}")
             except Exception:
-                raise ValueError(f"Invalid URL format: {local_url}")
-        
+                raise ValueError(f"Invalid URL format: {local_url}") from None
+
         self.local_url = local_url
         self.config = self._load_config()
-        
+
         if model != "local" and not self.api_key:
             raise ValueError("API key required for non-local models. Set OPENAI_API_KEY environment variable or use --api-key flag.")
-    
+
     def _extract_json_from_response(self, raw_response: str) -> Dict[str, Any]:
         """Extract JSON object from potentially messy model response."""
         # First try to find a complete JSON object
         stack = []
         start_idx = -1
         end_idx = -1
-        
+
         for i, char in enumerate(raw_response):
             if char == '{':
                 if not stack:
@@ -65,23 +65,23 @@ class TraceClean:
                     if not stack:
                         end_idx = i + 1
                         break
-        
+
         if start_idx != -1 and end_idx != -1:
             try:
                 json_str = raw_response[start_idx:end_idx]
                 return json.loads(json_str)
             except json.JSONDecodeError:
                 pass
-        
+
         # If that fails, try parsing the whole response
         return json.loads(raw_response)
-    
+
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from ~/.trace-clean/config.yaml if it exists."""
         config_path = Path.home() / ".trace-clean" / "config.yaml"
         if config_path.exists():
             try:
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     config = yaml.safe_load(f) or {}
                     # Apply config settings
                     if 'local_url' in config and not hasattr(self, '_local_url_set'):
@@ -90,7 +90,7 @@ class TraceClean:
             except Exception as e:
                 logger.warning(f"Failed to load config: {e}")
         return {}
-    
+
     def _get_few_shot_prompt(self, stack_trace: str) -> str:
         """Generate the few-shot prompt for the LLM."""
         prompt = """You are an expert debugging assistant. Analyze the following stack trace and provide a structured summary.
@@ -189,13 +189,13 @@ Now analyze the following stack trace:
 
 IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or after. Start with { and end with }."""
         return prompt
-    
+
     def _call_openai(self, prompt: str) -> Dict[str, Any]:
         """Call OpenAI API."""
         client = openai.OpenAI(api_key=self.api_key)
-        
+
         try:
-            response = client.chat.completions.create(
+            response = client.chat.completions.create(  # type: ignore[call-overload]
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You are a debugging assistant that analyzes stack traces. Always respond with valid JSON."},
@@ -204,20 +204,20 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
                 temperature=self.config.get('temperature', 0.3),
                 max_tokens=self.config.get('max_tokens', 1500)
             )
-            
+
             content = response.choices[0].message.content
             return json.loads(content)
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response: {e}")
-            raise ValueError("The model returned invalid JSON. Please try again.")
+            raise ValueError("The model returned invalid JSON. Please try again.") from e
         except Exception as e:
             logger.error(f"OpenAI API error: {e}")
             raise
-    
+
     def _call_local_model(self, prompt: str) -> Dict[str, Any]:
         """Call local model via Ollama API."""
         url = f"{self.local_url}/api/generate"
-        
+
         payload = {
             "model": self.config.get("local_model", "llama3.2"),
             "prompt": prompt,
@@ -227,48 +227,48 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
                 "num_predict": self.config.get('max_tokens', 2000)
             }
         }
-        
+
         try:
             response = requests.post(url, json=payload, timeout=self.config.get('timeout', 120))
             response.raise_for_status()
-            
+
             result = response.json()
             raw_response = result.get("response", "")
-            
+
             # Try to extract JSON from the response
             return self._extract_json_from_response(raw_response)
-            
+
         except requests.exceptions.ConnectionError:
-            raise ConnectionError(f"Cannot connect to local model at {self.local_url}. Is Ollama running?")
-        except json.JSONDecodeError as e:
+            raise ConnectionError(f"Cannot connect to local model at {self.local_url}. Is Ollama running?") from None
+        except json.JSONDecodeError:
             logger.error(f"Failed to parse JSON from response: {raw_response[:500]}...")
-            raise ValueError("The local model returned invalid JSON. Please try again.")
+            raise ValueError("The local model returned invalid JSON. Please try again.") from None
         except Exception as e:
             logger.error(f"Local model error: {e}")
             raise
-    
+
     def analyze(self, stack_trace: str) -> Dict[str, Any]:
         """Analyze a stack trace and return structured results."""
         prompt = self._get_few_shot_prompt(stack_trace)
-        
+
         if self.model == "local":
             return self._call_local_model(prompt)
         else:
             return self._call_openai(prompt)
-    
+
     def format_output(self, result: Dict[str, Any], json_format: bool = False) -> str:
         """Format the analysis result for display."""
         if json_format:
             return json.dumps(result, indent=2)
-        
+
         # Create markdown output
         output = []
         output.append("# Stack Trace Analysis\n")
-        
+
         # Summary
         output.append("## Summary")
         output.append(f"{result['summary']}\n")
-        
+
         # Suspect Functions
         output.append("## Suspect Functions")
         for i, suspect in enumerate(result['suspect_functions'], 1):
@@ -277,12 +277,12 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
             output.append(f"- **Line**: {suspect['line']}")
             output.append(f"- **Confidence**: {suspect['confidence']}")
             output.append(f"- **Reason**: {suspect['reason']}")
-        
+
         # Next Actions
         output.append("\n## Next Actions")
         for i, action in enumerate(result['next_actions'], 1):
             output.append(f"{i}. {action}")
-        
+
         return "\n".join(output)
 
 
@@ -300,38 +300,38 @@ Examples:
   trace-clean --model local --local-url http://localhost:11434
         """
     )
-    
+
     parser.add_argument("file", nargs="?", help="File containing the stack trace (reads from stdin if not provided)")
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")
     parser.add_argument("--model", default="gpt-4o-mini", help="Language model to use (default: gpt-4o-mini)")
     parser.add_argument("--api-key", help="API key for the language model provider")
     parser.add_argument("--local-url", default="http://localhost:11434", help="URL for local model server (default: http://localhost:11434)")
-    
+
     args = parser.parse_args()
-    
+
     # Read stack trace
     if args.file:
         if not os.path.exists(args.file):
             console.print(f"[red]Error: File '{args.file}' not found[/red]")
             sys.exit(1)
-        with open(args.file, 'r', encoding='utf-8') as f:
+        with open(args.file, encoding='utf-8') as f:
             stack_trace = f.read()
     else:
         if sys.stdin.isatty():
             eof_key = "Ctrl+Z" if sys.platform == "win32" else "Ctrl+D"
             console.print(f"[yellow]Reading from stdin... (Press {eof_key} when done)[/yellow]")
         stack_trace = sys.stdin.read()
-    
+
     if not stack_trace.strip():
         console.print("[red]Error: No stack trace provided[/red]")
         sys.exit(1)
-    
+
     # Limit stack trace size to prevent memory issues
     MAX_STACK_TRACE_SIZE = 50000  # characters
     if len(stack_trace) > MAX_STACK_TRACE_SIZE:
         console.print(f"[yellow]Warning: Stack trace truncated from {len(stack_trace)} to {MAX_STACK_TRACE_SIZE} characters[/yellow]")
         stack_trace = stack_trace[:MAX_STACK_TRACE_SIZE]
-    
+
     try:
         # Create analyzer
         analyzer = TraceClean(
@@ -339,18 +339,18 @@ Examples:
             api_key=args.api_key,
             local_url=args.local_url
         )
-        
+
         # Analyze stack trace
         with console.status("[bold green]Analyzing stack trace..."):
             result = analyzer.analyze(stack_trace)
-        
+
         # Format and display output
         if args.json:
             console.print(RichJSON(json.dumps(result, indent=2)))
         else:
             markdown = Markdown(analyzer.format_output(result))
             console.print(markdown)
-            
+
     except Exception as e:
         console.print(f"[red]Error: {str(e)}[/red]")
         sys.exit(1)

@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pyrefly pytest
+    
+    - name: Run pyrefly type checker
+      run: pyrefly check
+    
+    - name: Test installation
+      run: |
+        trace-clean --help
+    
+    - name: Test with sample stack trace
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: |
+        # Create a sample stack trace
+        echo 'Traceback (most recent call last):
+          File "test.py", line 1, in <module>
+            1/0
+        ZeroDivisionError: division by zero' > test_trace.txt
+        
+        # Test if API key is set (skip test if not)
+        if [ -n "$OPENAI_API_KEY" ]; then
+          trace-clean test_trace.txt
+        else
+          echo "Skipping API test - no OPENAI_API_KEY set"
+        fi
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff
+    
+    - name: Lint with ruff
+      run: |
+        ruff check .
+        ruff format --check .

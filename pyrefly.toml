@@ -1,0 +1,2 @@
+project-includes = ["trace_clean_pkg/**/*.py"]
+project-excludes = ["**/*venv/**/*", "setup.py", "test_*.py"]
