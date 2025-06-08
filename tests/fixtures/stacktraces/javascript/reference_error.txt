@@ -1,0 +1,4 @@
+ReferenceError: undefinedVariable is not defined
+    at processData (/home/user/app/src/processors/dataProcessor.js:45:12)
+    at async DataService.handleRequest (/home/user/app/src/services/dataService.js:23:16)
+    at async /home/user/app/src/routes/api.js:78:9

@@ -33,6 +33,10 @@ class TraceClean:
     ):
         self.model = model
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        
+        # Track if local_url was explicitly provided (not default)
+        self._local_url_explicit = local_url != "http://localhost:11434"
+        
         # Validate local URL
         if local_url:
             try:
@@ -52,7 +56,13 @@ class TraceClean:
 
     def _extract_json_from_response(self, raw_response: str) -> Dict[str, Any]:
         """Extract JSON object from potentially messy model response."""
-        # First try to find a complete JSON object
+        # First try parsing the whole response (most common case)
+        try:
+            return json.loads(raw_response.strip())
+        except json.JSONDecodeError:
+            pass
+        
+        # Then try to find a complete JSON object
         stack = []
         start_idx = -1
         end_idx = -1
@@ -76,8 +86,8 @@ class TraceClean:
             except json.JSONDecodeError:
                 pass
 
-        # If that fails, try parsing the whole response
-        return json.loads(raw_response)
+        # If that also fails, raise an error
+        raise json.JSONDecodeError("Could not extract valid JSON from response", raw_response, 0)
 
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from ~/.trace-clean/config.yaml if it exists."""
@@ -86,8 +96,8 @@ class TraceClean:
             try:
                 with open(config_path) as f:
                     config = yaml.safe_load(f) or {}
-                    # Apply config settings
-                    if "local_url" in config and not hasattr(self, "_local_url_set"):
+                    # Apply config settings only if not explicitly provided in constructor
+                    if "local_url" in config and not self._local_url_explicit:
                         self.local_url = config["local_url"]
                     return config
             except Exception as e:
@@ -248,8 +258,16 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
 
         except requests.exceptions.ConnectionError:
             raise ConnectionError(f"Cannot connect to local model at {self.local_url}. Is Ollama running?") from None
-        except json.JSONDecodeError:
-            logger.error(f"Failed to parse JSON from response: {raw_response[:500]}...")
+        except json.JSONDecodeError as e:
+            # Handle case where response.json() fails or JSON extraction fails
+            if 'response' in locals():
+                try:
+                    response_text = str(getattr(response, 'text', 'Unknown response'))[:500]
+                except:
+                    response_text = 'Unknown response'
+            else:
+                response_text = 'Unknown response'
+            logger.error(f"Failed to parse JSON from response: {response_text}...")
             raise ValueError("The local model returned invalid JSON. Please try again.") from None
         except Exception as e:
             logger.error(f"Local model error: {e}")

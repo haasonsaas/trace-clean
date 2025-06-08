@@ -1,0 +1,21 @@
+thread 'main' panicked at 'index out of bounds: the len is 3 but the index is 5', src/main.rs:42:17
+stack backtrace:
+   0: rust_begin_unwind
+             at /rustc/897e37553bba8b42751c67658967889d11ecd120/library/std/src/panicking.rs:584:5
+   1: core::panicking::panic_fmt
+             at /rustc/897e37553bba8b42751c67658967889d11ecd120/library/core/src/panicking.rs:142:14
+   2: core::panicking::panic_bounds_check
+             at /rustc/897e37553bba8b42751c67658967889d11ecd120/library/core/src/panicking.rs:84:5
+   3: <usize as core::slice::index::SliceIndex<[T]>>::index
+             at /rustc/897e37553bba8b42751c67658967889d11ecd120/library/core/src/slice/index.rs:242:10
+   4: core::slice::index::<impl core::ops::index::Index<I> for [T]>::index
+             at /rustc/897e37553bba8b42751c67658967889d11ecd120/library/core/src/slice/index.rs:18:9
+   5: my_app::data::process_array
+             at ./src/data.rs:42:17
+   6: my_app::handlers::handle_request
+             at ./src/handlers.rs:15:9
+   7: my_app::main
+             at ./src/main.rs:23:5
+   8: core::ops::function::FnOnce::call_once
+             at /rustc/897e37553bba8b42751c67658967889d11ecd120/library/core/src/ops/function.rs:248:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.

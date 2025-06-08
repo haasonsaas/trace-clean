@@ -1,0 +1,6 @@
+SyntaxError: Unexpected token ')' in JSON at position 45
+    at JSON.parse (<anonymous>)
+    at parseConfig (/home/user/app/src/config/configParser.js:67:21)
+    at loadConfiguration (/home/user/app/src/config/loader.js:34:14)
+    at Object.<anonymous> (/home/user/app/src/app.js:12:1)
+    at Module._compile (internal/modules/cjs/loader.js:1063:30)

@@ -1,0 +1,7 @@
+Exception in thread "main" java.lang.ClassNotFoundException: com.example.database.ConnectionPool
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:581)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:178)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:522)
+	at com.example.app.DatabaseManager.initializePool(DatabaseManager.java:45)
+	at com.example.app.Application.startup(Application.java:23)
+	at com.example.app.Main.main(Main.java:15)

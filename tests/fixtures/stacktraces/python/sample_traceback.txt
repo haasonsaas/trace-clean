@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/Users/user/project/main.py", line 45, in <module>
+    result = process_data(input_data)
+  File "/Users/user/project/main.py", line 32, in process_data
+    validated = validate_input(data)
+  File "/Users/user/project/validators.py", line 78, in validate_input
+    check_format(data['format'])
+  File "/Users/user/project/validators.py", line 56, in check_format
+    if format_type not in ALLOWED_FORMATS:
+TypeError: argument of type 'NoneType' is not iterable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/user/project/main.py", line 48, in <module>
+    log_error(e)
+  File "/Users/user/project/logging_utils.py", line 23, in log_error
+    logger.error(f"Error occurred: {error.message}")
+AttributeError: 'TypeError' object has no attribute 'message'

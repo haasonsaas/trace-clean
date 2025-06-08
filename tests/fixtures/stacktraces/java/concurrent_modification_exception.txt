@@ -1,0 +1,6 @@
+Exception in thread "Thread-2" java.util.ConcurrentModificationException
+	at java.base/java.util.ArrayList$Itr.checkForComodification(ArrayList.java:1013)
+	at java.base/java.util.ArrayList$Itr.next(ArrayList.java:967)
+	at com.example.app.ListProcessor.processItems(ListProcessor.java:78)
+	at com.example.app.WorkerThread.run(WorkerThread.java:34)
+	at java.base/java.lang.Thread.run(Thread.java:834)

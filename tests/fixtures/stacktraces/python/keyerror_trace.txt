@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/user/project/data_processor.py", line 156, in process_user_data
+    user_score = calculate_score(user_data['metrics'])
+  File "/Users/user/project/scoring.py", line 89, in calculate_score
+    base_score = metrics['performance_score']
+KeyError: 'performance_score'

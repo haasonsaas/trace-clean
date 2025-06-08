@@ -1,0 +1,16 @@
+thread 'main' panicked at 'called `Option::unwrap()` on a `None` value', src/config.rs:89:45
+stack backtrace:
+   0: rust_begin_unwind
+             at /rustc/897e37553bba8b42751c67658967889d11ecd120/library/std/src/panicking.rs:584:5
+   1: core::panicking::panic_fmt
+             at /rustc/897e37553bba8b42751c67658967889d11ecd120/library/core/src/panicking.rs:142:14
+   2: core::panicking::panic
+             at /rustc/897e37553bba8b42751c67658967889d11ecd120/library/core/src/panicking.rs:48:5
+   3: core::option::Option<T>::unwrap
+             at /rustc/897e37553bba8b42751c67658967889d11ecd120/library/core/src/option.rs:369:21
+   4: my_app::config::load_database_config
+             at ./src/config.rs:89:45
+   5: my_app::database::connect
+             at ./src/database.rs:23:9
+   6: my_app::main
+             at ./src/main.rs:15:5

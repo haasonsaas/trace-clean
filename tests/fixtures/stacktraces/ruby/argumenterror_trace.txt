@@ -1,0 +1,3 @@
+/Users/user/app/lib/utils/string_processor.rb:34:in `process_text': wrong number of arguments (given 1, expected 2) (ArgumentError)
+	from /Users/user/app/app/models/document.rb:67:in `format_content'
+	from /Users/user/app/app/controllers/documents_controller.rb:89:in `show'

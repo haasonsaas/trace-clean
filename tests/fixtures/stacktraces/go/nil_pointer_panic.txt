@@ -1,0 +1,10 @@
+panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV code=0x1 addr=0x0 pc=0x4c8e85]
+
+goroutine 1 [running]:
+main.(*UserService).GetUser(0x0, 0xc000010240, 0x5, 0x5)
+	/Users/user/project/services/user.go:67 +0x45
+main.handleUserRequest(0xc000010240, 0x5, 0x5)
+	/Users/user/project/handlers/user_handler.go:34 +0x89
+main.main()
+	/Users/user/project/main.go:23 +0x55

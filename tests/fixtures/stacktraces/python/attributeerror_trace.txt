@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/user/app/models/user.py", line 67, in save_user
+    user.email.lower()
+AttributeError: 'NoneType' object has no attribute 'lower'

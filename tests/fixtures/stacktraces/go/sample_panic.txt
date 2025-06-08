@@ -1,0 +1,21 @@
+panic: runtime error: index out of range [5] with length 3
+
+goroutine 1 [running]:
+main.processSlice(0xc000010240, 0x3, 0x3, 0x5)
+	/Users/user/project/main.go:45 +0x1a5
+main.handleRequest(0xc000010240, 0x3, 0x3)
+	/Users/user/project/handlers.go:23 +0x72
+main.main()
+	/Users/user/project/main.go:15 +0x85
+
+goroutine 19 [select]:
+database/sql.(*DB).connectionOpener(0xc0000a8000, 0xc0000b6000)
+	/usr/local/go/src/database/sql/sql.go:1218 +0x87
+created by database/sql.OpenDB
+	/usr/local/go/src/database/sql/sql.go:794 +0x1c5
+
+goroutine 20 [chan receive]:
+github.com/example/logger.(*Logger).processLogs(0xc0000b8000)
+	/Users/user/go/pkg/mod/github.com/example/logger@v1.2.3/logger.go:156 +0x89
+created by github.com/example/logger.New
+	/Users/user/go/pkg/mod/github.com/example/logger@v1.2.3/logger.go:45 +0x1f2

@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/user/project/list_processor.py", line 34, in get_third_item
+    return items[2]
+IndexError: list index out of range

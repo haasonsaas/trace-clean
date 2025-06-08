@@ -1,0 +1,13 @@
+Segmentation fault (core dumped)
+
+(gdb) bt
+#0  0x0000000000401156 in processData (data=0x0) at src/processor.cpp:45
+#1  0x00000000004010f2 in handleRequest (req=...) at src/handler.cpp:23
+#2  0x0000000000401045 in main () at src/main.cpp:15
+
+(gdb) frame 0
+#0  0x0000000000401156 in processData (data=0x0) at src/processor.cpp:45
+45	    return data->getValue();
+
+Program received signal SIGSEGV, Segmentation fault.
+0x0000000000401156 in processData (data=0x0) at src/processor.cpp:45

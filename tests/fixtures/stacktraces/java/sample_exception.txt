@@ -1,0 +1,23 @@
+Exception in thread "main" java.lang.NullPointerException: Cannot invoke "String.length()" because "str" is null
+	at com.example.app.StringProcessor.processString(StringProcessor.java:45)
+	at com.example.app.DataHandler.handleData(DataHandler.java:78)
+	at com.example.app.Main.main(Main.java:23)
+
+Caused by: java.sql.SQLException: No suitable driver found for jdbc:mysql://localhost:3306/testdb
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:702)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:228)
+	at com.example.app.database.DatabaseConnection.connect(DatabaseConnection.java:34)
+	at com.example.app.services.UserService.getUser(UserService.java:56)
+	at com.example.app.controllers.UserController.handleRequest(UserController.java:89)
+	at com.example.app.Main.processRequest(Main.java:45)
+	... 2 more
+
+Exception in thread "AWT-EventQueue-0" java.lang.ArrayIndexOutOfBoundsException: Index 10 out of bounds for length 5
+	at com.example.app.gui.TableModel.getValueAt(TableModel.java:67)
+	at javax.swing.JTable.getValueAt(JTable.java:2720)
+	at javax.swing.JTable.prepareRenderer(JTable.java:5735)
+	at javax.swing.plaf.basic.BasicTableUI.paintCell(BasicTableUI.java:2114)
+	at javax.swing.plaf.basic.BasicTableUI.paintCells(BasicTableUI.java:2016)
+	at javax.swing.plaf.basic.BasicTableUI.paint(BasicTableUI.java:1812)
+	at javax.swing.plaf.ComponentUI.update(ComponentUI.java:161)
+	at javax.swing.JComponent.paintComponent(JComponent.java:780)

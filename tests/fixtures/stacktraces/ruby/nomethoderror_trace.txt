@@ -1,0 +1,4 @@
+/Users/user/app/app/controllers/orders_controller.rb:45:in `process_order': undefined method `calculate_tax' for nil:NilClass (NoMethodError)
+	from /Users/user/app/app/controllers/orders_controller.rb:23:in `create'
+	from /Users/user/.rvm/gems/ruby-3.0.0/gems/actionpack-7.0.4/lib/action_controller/metal/basic_implicit_render.rb:6:in `send_action'
+	from /Users/user/.rvm/gems/ruby-3.0.0/gems/actionpack-7.0.4/lib/abstract_controller/base.rb:215:in `process_action'

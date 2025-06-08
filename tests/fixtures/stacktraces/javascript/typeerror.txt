@@ -1,0 +1,5 @@
+TypeError: Cannot read property 'name' of undefined
+    at processUser (/app/user.js:15:20)
+    at validateInput (/app/validation.js:8:12)
+    at Object.main (/app/app.js:10:5)
+    at Module._compile (module.js:653:30)

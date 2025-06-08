@@ -1,0 +1,5 @@
+Exception in thread "main" java.lang.NullPointerException: Cannot invoke "com.myapp.models.User.getSubscription()" because "user" is null
+    at com.myapp.services.BillingService.calculateMonthlyCharge(BillingService.java:234)
+    at com.myapp.services.BillingService.processBilling(BillingService.java:187)
+    at com.myapp.jobs.BillingJob.execute(BillingJob.java:45)
+    at com.myapp.scheduler.JobScheduler.runJob(JobScheduler.java:112)

@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/user/project/main.py", line 5, in <module>
+    from external_lib import advanced_calculator
+ImportError: No module named 'external_lib'
