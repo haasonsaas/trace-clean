@@ -92,6 +92,7 @@ local_url: http://localhost:11434
 # Model parameters (applies to both OpenAI and local models)
 temperature: 0.3
 max_tokens: 1500  # For OpenAI, or num_predict for local models
+timeout: 120      # Request timeout in seconds for local models
 ```
 
 ## Example Output

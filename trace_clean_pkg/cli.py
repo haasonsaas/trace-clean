@@ -12,6 +12,7 @@ import yaml
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 import logging
+from urllib.parse import urlparse
 
 import openai
 import requests
@@ -31,11 +32,49 @@ class TraceClean:
                  local_url: str = "http://localhost:11434"):
         self.model = model
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        # Validate local URL
+        if local_url:
+            try:
+                parsed = urlparse(local_url)
+                if not parsed.scheme or not parsed.netloc:
+                    raise ValueError(f"Invalid URL format: {local_url}")
+            except Exception:
+                raise ValueError(f"Invalid URL format: {local_url}")
+        
         self.local_url = local_url
         self.config = self._load_config()
         
         if model != "local" and not self.api_key:
             raise ValueError("API key required for non-local models. Set OPENAI_API_KEY environment variable or use --api-key flag.")
+    
+    def _extract_json_from_response(self, raw_response: str) -> Dict[str, Any]:
+        """Extract JSON object from potentially messy model response."""
+        # First try to find a complete JSON object
+        stack = []
+        start_idx = -1
+        end_idx = -1
+        
+        for i, char in enumerate(raw_response):
+            if char == '{':
+                if not stack:
+                    start_idx = i
+                stack.append(char)
+            elif char == '}':
+                if stack:
+                    stack.pop()
+                    if not stack:
+                        end_idx = i + 1
+                        break
+        
+        if start_idx != -1 and end_idx != -1:
+            try:
+                json_str = raw_response[start_idx:end_idx]
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                pass
+        
+        # If that fails, try parsing the whole response
+        return json.loads(raw_response)
     
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from ~/.trace-clean/config.yaml if it exists."""
@@ -190,42 +229,14 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
         }
         
         try:
-            response = requests.post(url, json=payload, timeout=60)
+            response = requests.post(url, json=payload, timeout=self.config.get('timeout', 120))
             response.raise_for_status()
             
             result = response.json()
             raw_response = result.get("response", "")
             
             # Try to extract JSON from the response
-            # Sometimes models add text before/after JSON
-            import re
-            
-            # First try to find a complete JSON object
-            stack = []
-            start_idx = -1
-            end_idx = -1
-            
-            for i, char in enumerate(raw_response):
-                if char == '{':
-                    if not stack:
-                        start_idx = i
-                    stack.append(char)
-                elif char == '}':
-                    if stack:
-                        stack.pop()
-                        if not stack:
-                            end_idx = i + 1
-                            break
-            
-            if start_idx != -1 and end_idx != -1:
-                try:
-                    json_str = raw_response[start_idx:end_idx]
-                    return json.loads(json_str)
-                except json.JSONDecodeError:
-                    pass
-            
-            # If that fails, try parsing the whole response
-            return json.loads(raw_response)
+            return self._extract_json_from_response(raw_response)
             
         except requests.exceptions.ConnectionError:
             raise ConnectionError(f"Cannot connect to local model at {self.local_url}. Is Ollama running?")
@@ -303,16 +314,23 @@ Examples:
         if not os.path.exists(args.file):
             console.print(f"[red]Error: File '{args.file}' not found[/red]")
             sys.exit(1)
-        with open(args.file, 'r') as f:
+        with open(args.file, 'r', encoding='utf-8') as f:
             stack_trace = f.read()
     else:
         if sys.stdin.isatty():
-            console.print("[yellow]Reading from stdin... (Press Ctrl+D when done)[/yellow]")
+            eof_key = "Ctrl+Z" if sys.platform == "win32" else "Ctrl+D"
+            console.print(f"[yellow]Reading from stdin... (Press {eof_key} when done)[/yellow]")
         stack_trace = sys.stdin.read()
     
     if not stack_trace.strip():
         console.print("[red]Error: No stack trace provided[/red]")
         sys.exit(1)
+    
+    # Limit stack trace size to prevent memory issues
+    MAX_STACK_TRACE_SIZE = 50000  # characters
+    if len(stack_trace) > MAX_STACK_TRACE_SIZE:
+        console.print(f"[yellow]Warning: Stack trace truncated from {len(stack_trace)} to {MAX_STACK_TRACE_SIZE} characters[/yellow]")
+        stack_trace = stack_trace[:MAX_STACK_TRACE_SIZE]
     
     try:
         # Create analyzer
