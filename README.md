@@ -109,7 +109,7 @@ Given a Python KeyError stack trace, trace-clean provides:
    - Reason: This line directly accesses data['value'] without checking if the key exists
 
 2. **main** (`app.py:21`)
-   - Confidence: Medium  
+   - Confidence: Medium
    - Reason: This function passes the data dictionary to process_data - the data might be missing the required 'value' key
 
 ### Next Actions
@@ -169,6 +169,38 @@ trace-clean handles various common stack trace formats:
 ## Contributing
 
 Contributions are welcome! Please feel free to submit pull requests or open issues.
+
+### Development Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/haasonsaas/trace-clean.git
+   cd trace-clean
+   ```
+
+2. Create a virtual environment and install dependencies:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements-dev.txt
+   ```
+
+3. Install pre-commit hooks:
+   ```bash
+   pre-commit install
+   ```
+
+### Code Quality
+
+This project uses:
+- **ruff** for linting and formatting
+- **pyrefly** for type checking
+- **pre-commit** hooks to ensure code quality
+
+Before committing, ensure all checks pass:
+```bash
+pre-commit run --all-files
+```
 
 ## License
 

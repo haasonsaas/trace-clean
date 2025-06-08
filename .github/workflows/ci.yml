@@ -15,25 +15,25 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -e .
         pip install pyrefly pytest
-    
+
     - name: Run pyrefly type checker
       run: pyrefly check
-    
+
     - name: Test installation
       run: |
         trace-clean --help
-    
+
     - name: Test with sample stack trace
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -43,7 +43,7 @@ jobs:
           File "test.py", line 1, in <module>
             1/0
         ZeroDivisionError: division by zero' > test_trace.txt
-        
+
         # Test if API key is set (skip test if not)
         if [ -n "$OPENAI_API_KEY" ]; then
           trace-clean test_trace.txt
@@ -53,20 +53,20 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.11"
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install ruff
-    
+
     - name: Lint with ruff
       run: |
         ruff check .
