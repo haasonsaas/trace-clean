@@ -59,9 +59,7 @@ trace-clean --json error.log
 trace-clean requires an API key for OpenAI:
 
 ```bash
-# Option 1: Environment variable
-export TRACE_CLEAN_API_KEY="your-api-key"
-# or
+# Option 1: Environment variable (recommended)
 export OPENAI_API_KEY="your-api-key"
 
 # Option 2: Command line
@@ -87,11 +85,13 @@ For offline usage or enhanced privacy:
 Create `~/.trace-clean/config.yaml` for persistent settings:
 
 ```yaml
-# Specify local model for offline mode
+# Local model configuration
 local_model: llama3.2
-
-# Custom local server URL
 local_url: http://localhost:11434
+
+# Model parameters (applies to both OpenAI and local models)
+temperature: 0.3
+max_tokens: 1500  # For OpenAI, or num_predict for local models
 ```
 
 ## Example Output
@@ -154,9 +154,16 @@ trace-clean handles various common stack trace formats:
 
 ## Privacy and Security
 
-- **API Mode**: Stack traces are sent to OpenAI's API. Ensure no sensitive data is included
-- **Local Mode**: All processing happens on your machine with Ollama
-- **No Persistence**: trace-clean is stateless and doesn't store any data
+⚠️ **Important**: Stack traces may contain sensitive information such as:
+- File paths revealing system structure
+- Variable values including passwords or API keys
+- Database connection strings
+- User data
+
+**Recommendations**:
+- **API Mode**: Stack traces are sent to OpenAI's API. Review and sanitize traces before analysis
+- **Local Mode**: Use Ollama for sensitive traces - all processing stays on your machine
+- **No Persistence**: trace-clean is stateless and doesn't store any data locally
 
 ## Contributing
 

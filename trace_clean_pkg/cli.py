@@ -30,12 +30,12 @@ class TraceClean:
     def __init__(self, model: str = "gpt-4o-mini", api_key: Optional[str] = None, 
                  local_url: str = "http://localhost:11434"):
         self.model = model
-        self.api_key = api_key or os.getenv("TRACE_CLEAN_API_KEY") or os.getenv("OPENAI_API_KEY")
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.local_url = local_url
         self.config = self._load_config()
         
         if model != "local" and not self.api_key:
-            raise ValueError("API key required for non-local models. Set TRACE_CLEAN_API_KEY or OPENAI_API_KEY environment variable.")
+            raise ValueError("API key required for non-local models. Set OPENAI_API_KEY environment variable or use --api-key flag.")
     
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from ~/.trace-clean/config.yaml if it exists."""
@@ -43,7 +43,11 @@ class TraceClean:
         if config_path.exists():
             try:
                 with open(config_path, 'r') as f:
-                    return yaml.safe_load(f) or {}
+                    config = yaml.safe_load(f) or {}
+                    # Apply config settings
+                    if 'local_url' in config and not hasattr(self, '_local_url_set'):
+                        self.local_url = config['local_url']
+                    return config
             except Exception as e:
                 logger.warning(f"Failed to load config: {e}")
         return {}
@@ -158,8 +162,8 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
                     {"role": "system", "content": "You are a debugging assistant that analyzes stack traces. Always respond with valid JSON."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.3,
-                max_tokens=1000
+                temperature=self.config.get('temperature', 0.3),
+                max_tokens=self.config.get('max_tokens', 1500)
             )
             
             content = response.choices[0].message.content
@@ -179,9 +183,9 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
             "model": self.config.get("local_model", "llama3.2"),
             "prompt": prompt,
             "stream": False,
-            "temperature": 0.3,
+            "temperature": self.config.get('temperature', 0.3),
             "options": {
-                "num_predict": 2000
+                "num_predict": self.config.get('max_tokens', 2000)
             }
         }
         
