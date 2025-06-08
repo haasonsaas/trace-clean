@@ -1,6 +1,5 @@
 """Pytest configuration and shared fixtures for trace-clean tests."""
 
-import os
 import sys
 from pathlib import Path
 from typing import Generator
@@ -174,17 +173,17 @@ def temp_file(tmp_path: Path) -> Generator[Path, None, None]:
 def mock_clipboard(monkeypatch):
     """Mock clipboard functionality for testing."""
     clipboard_content = None
-    
+
     def mock_copy(text):
         nonlocal clipboard_content
         clipboard_content = text
-    
+
     def mock_paste():
         return clipboard_content or ""
-    
+
     monkeypatch.setattr("pyperclip.copy", mock_copy)
     monkeypatch.setattr("pyperclip.paste", mock_paste)
-    
+
     return {"copy": mock_copy, "paste": mock_paste, "content": lambda: clipboard_content}
 
 
@@ -192,12 +191,14 @@ def mock_clipboard(monkeypatch):
 def cli_runner():
     """Create a Click CLI test runner."""
     from click.testing import CliRunner
+
     return CliRunner()
 
 
 @pytest.fixture
 def mock_openai_response(monkeypatch):
     """Mock OpenAI API responses for testing."""
+
     def mock_response(prompt, model="gpt-4", temperature=0):
         # Return a predictable cleaned stacktrace
         return """Here's the cleaned stacktrace:
@@ -205,10 +206,13 @@ def mock_openai_response(monkeypatch):
 Error: Division by zero
   at calculate() in calculator.py:42
   at main() in app.py:15"""
-    
+
     # This will need to be adjusted based on how the actual OpenAI integration is implemented
-    monkeypatch.setattr("openai.ChatCompletion.create", lambda **kwargs: {
-        "choices": [{"message": {"content": mock_response(kwargs.get("messages", [{}])[-1].get("content", ""))}}]
-    })
-    
+    monkeypatch.setattr(
+        "openai.ChatCompletion.create",
+        lambda **kwargs: {
+            "choices": [{"message": {"content": mock_response(kwargs.get("messages", [{}])[-1].get("content", ""))}}]
+        },
+    )
+
     return mock_response

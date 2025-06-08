@@ -33,10 +33,10 @@ class TraceClean:
     ):
         self.model = model
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        
+
         # Track if local_url was explicitly provided (not default)
         self._local_url_explicit = local_url != "http://localhost:11434"
-        
+
         # Validate local URL
         if local_url:
             try:
@@ -61,7 +61,7 @@ class TraceClean:
             return json.loads(raw_response.strip())
         except json.JSONDecodeError:
             pass
-        
+
         # Then try to find a complete JSON object
         stack = []
         start_idx = -1
@@ -258,15 +258,15 @@ IMPORTANT: You must return ONLY valid JSON, nothing else. No text before or afte
 
         except requests.exceptions.ConnectionError:
             raise ConnectionError(f"Cannot connect to local model at {self.local_url}. Is Ollama running?") from None
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             # Handle case where response.json() fails or JSON extraction fails
-            if 'response' in locals():
+            if "response" in locals():
                 try:
-                    response_text = str(getattr(response, 'text', 'Unknown response'))[:500]
-                except:
-                    response_text = 'Unknown response'
+                    response_text = str(getattr(response, "text", "Unknown response"))[:500]
+                except Exception:
+                    response_text = "Unknown response"
             else:
-                response_text = 'Unknown response'
+                response_text = "Unknown response"
             logger.error(f"Failed to parse JSON from response: {response_text}...")
             raise ValueError("The local model returned invalid JSON. Please try again.") from None
         except Exception as e:

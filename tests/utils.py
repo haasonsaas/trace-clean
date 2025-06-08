@@ -2,7 +2,7 @@
 
 import tempfile
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Dict, List
 
 
 def create_temp_stacktrace_file(content: str, filename: str = "test_trace.txt") -> Path:
@@ -18,31 +18,32 @@ def assert_stacktrace_cleaned(original: str, cleaned: str) -> bool:
     # Basic checks that cleaned version should satisfy
     assert len(cleaned) > 0, "Cleaned stacktrace should not be empty"
     assert len(cleaned) <= len(original), "Cleaned stacktrace should not be longer than original"
-    
+
     # Check that the core error information is preserved
-    lines_original = original.split('\n')
-    lines_cleaned = cleaned.split('\n')
-    
+    lines_original = original.split("\n")
+    lines_cleaned = cleaned.split("\n")
+
     # At minimum, should preserve the main error type/message
-    first_error_line = next((line for line in lines_original if 'Error' in line or 'Exception' in line), "")
+    first_error_line = next((line for line in lines_original if "Error" in line or "Exception" in line), "")
     if first_error_line:
-        assert any(first_error_line.split(':')[0] in line for line in lines_cleaned), \
-            "Main error type should be preserved"
-    
+        assert any(
+            first_error_line.split(":")[0] in line for line in lines_cleaned
+        ), "Main error type should be preserved"
+
     return True
 
 
 def get_sample_stacktraces() -> Dict[str, str]:
     """Get all sample stacktraces for testing."""
     fixtures_dir = Path(__file__).parent / "fixtures" / "stacktraces"
-    
+
     stacktraces = {}
     for lang_dir in fixtures_dir.iterdir():
         if lang_dir.is_dir():
             for trace_file in lang_dir.glob("*.txt"):
                 key = f"{lang_dir.name}_{trace_file.stem}"
                 stacktraces[key] = trace_file.read_text()
-    
+
     return stacktraces
 
 
@@ -58,7 +59,7 @@ TypeError: 'NoneType' object is not iterable
 
 AttributeError: 'TypeError' object has no attribute 'message'
   at log_error() in logging_utils.py:23"""
-    
+
     elif "javascript" in prompt.lower():
         return """Here's the cleaned JavaScript stacktrace:
 
@@ -70,7 +71,7 @@ TypeError: Cannot read property 'length' of undefined
 ReferenceError: config is not defined
   at Database.connect() in connection.js:15
   at initializeApp() in app.js:34"""
-    
+
     else:
         return """Here's the cleaned stacktrace:
 
@@ -81,24 +82,24 @@ Generic error occurred
 
 class MockFileSystem:
     """Mock file system for testing file operations."""
-    
+
     def __init__(self):
         self.files: Dict[str, str] = {}
-    
+
     def write_file(self, path: str, content: str):
         """Mock file write operation."""
         self.files[path] = content
-    
+
     def read_file(self, path: str) -> str:
         """Mock file read operation."""
         if path not in self.files:
             raise FileNotFoundError(f"File not found: {path}")
         return self.files[path]
-    
+
     def file_exists(self, path: str) -> bool:
         """Check if mock file exists."""
         return path in self.files
-    
+
     def list_files(self) -> List[str]:
         """List all mock files."""
         return list(self.files.keys())
